@@ -1,9 +1,14 @@
-# Building and Running CHIP Linux Lighting Example for i.MX 8M Mini EVK
+# Building and Running CHIP Linux Examples for i.MX 8M Mini EVK
 
-This document describes how to build the
-[CHIP Linux lighting Example](../../../linux) with the NXP embedded Linux Yocto
-SDK and then run the output executable file on the NXP i.MX 8M Mini EVK
-development board. This document has been tested on:
+This document describes how to build below Linux examples with the NXP embedded
+Linux Yocto SDK and then run the output executable files on the NXP i.MX 8M
+Mini EVK development board.
+
+- [CHIP Linux all-clusters Exammple](../../examples/all-clusters-app/linux)
+- [CHIP Linux lighting Example](../../examples/lighting-app/linux)
+- [CHIP Linux thermostat Example](../../examples/thermostat/linux)
+
+This document has been tested on:
 
 -   x64 host machine to build (cross-compile) the example
     1.  running Ubuntu for 64bit PC(AMD64) desktop 20.04 LTS.
@@ -16,10 +21,10 @@ Linux OS development. For more information about this project, see the
 
 <hr>
 
--   [Building and Running CHIP Linux Lighting Example for i.MX 8M Mini EVK](#building-and-running-chip-linux-lighting-example-for-imx-8m-mini-evk)
-    -   [Building](#building)
-    -   [Commandline Arguments](#command-line-args)
-    -   [Running the Complete Example on i.MX 8M Mini EVK](#running-complete-example-on-imx8mmevk)
+- [Building and Running CHIP Linux Examples for i.MX 8M Mini EVK](#building-and-running-chip-linux-examples-for-imx-8m-mini-evk)
+  - [Building](#building)
+  - [Commandline arguments](#commandline-arguments)
+  - [Running the Complete Examples on i.MX 8M Mini EVK](#running-the-complete-examples-on-imx-8m-mini-evk)
 
 <hr>
 
@@ -27,14 +32,14 @@ Linux OS development. For more information about this project, see the
 
 ## Building
 
-Before building the CHIP Linux Lighting Example, the Yocto source code released
-by NXP needs to be downloaded, then the Yocto SDK and the EVK Linux SD card
-image need to be generated.
+Before building the CHIP Linux Examples, the Yocto source code released by NXP
+needs to be downloaded, then the Yocto SDK and the EVK Linux SD card image need
+to be generated.
 
 -   Download the Yocto source code and generate the Yocto SDK and the SD card
     image
 
-    The Yocto source code is maintained with with a repo manifest, the tool
+    The Yocto source code is maintained with a repo manifest, the tool
     `repo` is used to download the source code.
 
     This document is tested with the i.MX Yocto 5.10.35_2.0.0 release. Run the
@@ -112,31 +117,49 @@ image need to be generated.
 
 -   Build the example application:
 
+    Except changing the working directory to the ones holding the CHIP Linux
+    Examples code, all the other steps are the same.
+
+          # If the all-clusters example is to be built
+          $ cd ~/connectedhomeip/examples/all-clusters-app/linux
+
+          # If the lighting example is to be built
           $ cd ~/connectedhomeip/examples/lighting-app/linux
+
+          # If the thermostat example is to be built
+          $ cd ~/connectedhomeip/examples/thermostat/linux
+
           $ git submodule update --init
           $ source third_party/connectedhomeip/scripts/activate.sh
-          $ PLATFORM_CFLAGS="-DCHIP_DEVICE_CONFIG_WIFI_STATION_IF_NAME=\\\"mlan0\\\""
+          $ PLATFORM_CFLAGS='-DCHIP_DEVICE_CONFIG_WIFI_STATION_IF_NAME=\"mlan0\"", "-DCHIP_DEVICE_CONFIG_LINUX_DHCPC_CMD=\"udhcpc -b -i %s \"'
           $ PKG_CONFIG_SYSROOT_DIR=${PKG_CONFIG_SYSROOT_DIR} \
             PKG_CONFIG_LIBDIR=${PKG_CONFIG_PATH} \
-            gn gen out/aarch64 --args='target_os="linux" target_cpu="arm64" arm_arch="armv8-a"
-                import("//build_overrides/build.gni")
-                target_cflags=[ "--sysroot='${SDKTARGETSYSROOT}'", "'${PLATFORM_CFLAGS}'" ]
-                target_ldflags = [ "--sysroot='${SDKTARGETSYSROOT}'" ]
-                custom_toolchain="${build_root}/toolchain/custom"
-                target_cc="'${OECORE_NATIVE_SYSROOT}'/usr/bin/aarch64-poky-linux/aarch64-poky-linux-gcc"
-                target_cxx="'${OECORE_NATIVE_SYSROOT}'/usr/bin/aarch64-poky-linux/aarch64-poky-linux-g++"
-                target_ar="'${OECORE_NATIVE_SYSROOT}'/usr/bin/aarch64-poky-linux/aarch64-poky-linux-ar"'
+            gn gen out/aarch64 --args="target_os=\"linux\" target_cpu=\"arm64\" arm_arch=\"armv8-a\"
+                import(\"//build_overrides/build.gni\")
+                target_cflags=[ \"--sysroot=${SDKTARGETSYSROOT}\", \"${PLATFORM_CFLAGS}\" ]
+                target_ldflags = [ \"--sysroot=${SDKTARGETSYSROOT}\" ]
+                custom_toolchain=\"\${build_root}/toolchain/custom\"
+                target_cc=\"${OECORE_NATIVE_SYSROOT}/usr/bin/aarch64-poky-linux/aarch64-poky-linux-gcc\"
+                target_cxx=\"${OECORE_NATIVE_SYSROOT}/usr/bin/aarch64-poky-linux/aarch64-poky-linux-g++\"
+                target_ar=\"${OECORE_NATIVE_SYSROOT}/usr/bin/aarch64-poky-linux/aarch64-poky-linux-ar\""
           $ ninja -C out/aarch64
 
-    The executable file named chip-lighting-app is built under out/aarch64, it
-    can be executed on the i.MX 8M Mini EVK running the Yocto image previously
-    generated as described in the sections below.
+    The executable file is built under out/aarch64, it can be executed on the
+    i.MX 8M Mini EVK running the Yocto image previously generated as described
+    in the sections below.
 
 <a name="command-line-args"></a>
 
 ## Commandline arguments
 
-The generated executable file supports to work with below commandline argument:
+The generated executable files supports to work with below commandline
+argument:
+
+-   `--wifi`
+
+    Enables Wi-Fi management feature. Required for Wi-Fi commissioning.
+
+    The Wi-Fi device on i.MX 8M Mini EVK is the NXP 88W8987 Wi-Fi/BT module.
 
 -   `--ble-device <interface id>`
 
@@ -146,11 +169,14 @@ The generated executable file supports to work with below commandline argument:
     `hciconfig` command, for example, `--ble-device 1` means using `hci1`
     interface. Default: `0`.
 
-    The BLE device on i.MX 8M Mini EVK is the NXP 88W8987 WiFi/BT module.
+    The BLE device on i.MX 8M Mini EVK is the NXP 88W8987 Wi-Fi/BT module.
 
-<a name="running-complete-example-on-imx8mmevk"></a>
+<a name="running-complete-examples-on-imx8mmevk"></a>
 
-## Running the Complete Example on i.MX 8M Mini EVK
+## Running the Complete Examples on i.MX 8M Mini EVK
+
+The steps and commands to run the examples are quite similar to each other.
+Take the thermostat-app as an example in below description.
 
 -   Prerequisites
 
@@ -179,8 +205,8 @@ The generated executable file supports to work with below commandline argument:
 
     In order to test the CHIP protocol functions, another device on the same
     network is needed to run the
-    [ChipDeviceController](../../../../../src/controller/python) tool to
-    communicate with the i.MX 8M Mini EVK.
+    [ChipDeviceController](../../src/controller/python) tool to communicate
+    with the i.MX 8M Mini EVK.
 
     This controller device can be a laptop / workstation. Bluetooth
     functionality is needed on this device.
@@ -197,10 +223,15 @@ The generated executable file supports to work with below commandline argument:
     -   Boot up Ubuntu on the Raspberry Pi
     -   Clone this connectedhomeip project
     -   Follow Python ChipDeviceController
-        [README.md](../../../../../src/controller/python/README.md) document.
+        [README.md](../../src/controller/python/README.md) document.
         Refer to the "Building and installing" part to build the tool.
 
 -   Running
+
+    -   Initialize the BT device on the i.MX 8M Mini EVK board
+
+              $ modprobe moal mod_para=nxp/wifi_mod_para.conf       # Load the Wi-Fi/BT firmware
+              $ hciattach /dev/ttymxc0 any 115200 flow              # Initialize the BT device
 
     -   Find the Bluetooth device id for i.MX 8M Mini EVK by executing the
         command below. The number following string `hci` is the Bluetooth device
@@ -213,24 +244,53 @@ The generated executable file supports to work with below commandline argument:
                       RX bytes:73311 acl:1527 sco:0 events:3023 errors:0
                       TX bytes:48805 acl:1459 sco:0 commands:704 errors:0
 
-    -   Run the Linux Lighting Example App
+    -   Run the Linux Example App
 
-              $ modprobe moal mod_para=nxp/wifi_mod_para.conf       # Load the Wi-Fi/BT firmware
-              $ hciattach /dev/ttymxc0 any 115200 flow              # Initialize the BT device
-              $ /home/root/chip-lighting-app --ble-device 0         # The bluetooth device used is hci0
+              $ /home/root/thermostat-app --ble-device 0 --wifi  # The bluetooth device used is hci0 and support wifi network
 
-    -   Run [ChipDeviceController](../../../../../src/controller/python) on the
+    -   Run [ChipDeviceController](../../src/controller/python) on the
         controller device to communicate with i.MX 8M Mini EVK running the
         example.
 
-              $ sudo out/python_env/bin/chip-device-ctrl                 # execute the tool
-                chip-device-ctrl > connect -ble 3840 20202021 8889       # connect to i.MX 8M Mini EVK
-                chip-device-ctrl > zcl OnOff Toggle 8889 1 0             # send command to i.MX 8M Mini EVK
+              $ sudo out/python_env/bin/chip-device-ctrl                                          # execute the tool
+                chip-device-ctrl > connect -ble 3840 20202021 8889                                # connect to i.MX 8M Mini EVK
+                chip-device-ctrl > zcl Thermostat SetpointRaiseLower 8889 1 0 mode=1 amount=10    # send command to i.MX 8M Mini EVK via BLE
 
         (Note that the last two commands `connect -ble 3840 20202021 8889` and
-        `zcl OnOff Toggle 8889 1 0` are Python CHIP Device Controller commands,
-        not shell commands.)
+        `zcl Thermostat SetpointRaiseLower 8889 1 0 mode=1 amount=10` are Python
+        CHIP Device Controller commands, not shell commands. The 3840 is the
+        target device's `discriminator`. The 20202021 is the `setup pin code`.
+        8889 is the `node id` and if not input 8889 a random node id will be
+        assigned.)
 
         After the previous commands are executed, inspect the logs of both the
         i.MX 8M Mini EVK and the controller device to observe connection and
         control events.
+
+    -   Provision the i.MX 8M Mini EVK to a Wi-Fi AP with the following commands
+        by `NetworkCommissioning` Cluster.
+
+        Command `AddWiFiNetwork` sends the target Wi-Fi AP's SSID and password.
+        The `${SSID}` and `${PASSWORD}` should be in plaintext formt. At this
+        moment, Wi-Fi is still idle on the i.MX8 Mini EVK.
+
+        Command `EnableNetwork` triggers the Wi-Fi AP connecting operation on
+        i.MX8 Mini EVK.
+
+                chip-device-ctrl > zcl NetworkCommissioning AddWiFiNetwork 8889 0 0 ssid=str:${SSID} credentials=str:${PASSWORD} breadcrumb=0 timeoutMs=5000
+                chip-device-ctrl > zcl NetworkCommissioning EnableNetwork 8889 0 0 networkID=str:${SSID} breadcrumb=0 timeoutMs=15000
+
+    -   Make sure the controllor device is under the same network of this Wi-Fi
+        AP because the Wi-Fi connection is established between the Wi-Fi AP and
+        the i.MX8 Mini EVK and mDNS only works on local network.
+
+        Resolve the target device with DNS-SD and update the address of the
+        node. The compressed fabric id is necessary for the resolve command.
+
+                chip-device-ctrl > close-ble  # Shutdown the BLE connection
+                chip-device-ctrl > get-fabricid
+                  Get fabric ID complete
+                  Raw Fabric ID: 0x0000000000000000 (0)
+                  Compressed Fabric ID: 0x7e58da6d9bbc85de (9104266811028571614)
+                chip-device-ctrl > resolve 9104266811028571614 8889                                # The 9104266811028571614 is the decimal compressed Fabric ID. 8889 is the node ID.
+                chip-device-ctrl > zcl Thermostat SetpointRaiseLower 8889 1 0 mode=1 amount=10     # Now the ZCL command will be send via IP network.
