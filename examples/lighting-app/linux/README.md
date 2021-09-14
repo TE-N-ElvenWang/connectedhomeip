@@ -6,7 +6,8 @@ on **Ubuntu for Raspberry Pi Server 20.04 LTS (aarch64)** and **Ubuntu for
 Raspberry Pi Desktop 20.10 (aarch64)**
 
 This example can also be cross-compiled on x64 host and run on NXP i.MX 8M Mini
-EVK, see the associated [README document](../nxp/linux-imx/imx8m/README.md) for
+EVK, see the associated
+[README document](../../../docs/guides/nxp_imx8m_linux_examples.md) for
 details.
 
 <hr>
