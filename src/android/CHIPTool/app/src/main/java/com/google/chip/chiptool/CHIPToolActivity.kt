@@ -32,6 +32,7 @@ import chip.setuppayload.SetupPayloadParser.UnrecognizedQrCodeException
 import com.google.chip.chiptool.attestation.AttestationTestFragment
 import com.google.chip.chiptool.clusterclient.OnOffClientFragment
 import com.google.chip.chiptool.clusterclient.SensorClientFragment
+import com.google.chip.chiptool.clusterclient.ThermoClientFragment
 import com.google.chip.chiptool.echoclient.EchoClientFragment
 import com.google.chip.chiptool.provisioning.DeviceProvisioningFragment
 import com.google.chip.chiptool.provisioning.ProvisionNetworkType
@@ -82,14 +83,22 @@ class CHIPToolActivity :
 
   override fun onCommissioningComplete(code: Int) {
     if (code == 0) {
-      showFragment(OnOffClientFragment.newInstance(), false)
+      //showFragment(OnOffClientFragment.newInstance(), false)
+      showFragment(ThermoClientFragment.newInstance(), false)
+
     } else {
       showFragment(SelectActionFragment.newInstance(), false)
     }
   }
 
   override fun handleScanQrCodeClicked() {
-    showFragment(BarcodeFragment.newInstance())
+//    showFragment(BarcodeFragment.newInstance())
+
+    networkType = ProvisionNetworkType.WIFI
+    var test2:String = "MT:YNJV7VSC00KA0648G00"
+    Log.d("testtest", "---------QR Code local ------------$test2")
+    var payload: SetupPayload = SetupPayloadParser().parseQrCode(test2)
+    onCHIPDeviceInfoReceived(CHIPDeviceInfo.fromSetupPayload(payload))
   }
 
   override fun onProvisionWifiCredentialsClicked() {
@@ -108,6 +117,10 @@ class CHIPToolActivity :
 
   override fun handleOnOffClicked() {
     showFragment(OnOffClientFragment.newInstance())
+  }
+
+  override fun handleThermoClicked() {
+    showFragment(ThermoClientFragment.newInstance())
   }
 
   override fun handleSensorClicked() {

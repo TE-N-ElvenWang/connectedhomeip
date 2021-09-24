@@ -28,6 +28,7 @@
     <string name="provision_thread_credentials_btn_text">Provision CHIP device with Thread</string>
     <string name="echo_client_btn_text">Echo Client</string>
     <string name="on_off_level_btn_text">Light On/Off &amp; Level Cluster</string>
+    <string name="thermo_on_off_level_btn_text">Thermo Control Cluster</string>
     <string name="enter_ip_address_hint_text">Enter IP Address (eg. 192.168.10.2)</string>
     <string name="enter_fabric_id_hint_text">Enter Fabric ID</string>
     <string name="enter_device_id_hint_text">Enter Device ID</string>
@@ -39,6 +40,10 @@
     <string name="send_command_off_btn_text">Off</string>
     <string name="send_command_toggle_btn_text">Toggle</string>
     <string name="read_on_off_attribute_btn_text">Read On/Off</string>
+    <string name="read_thermo_attribute_btn_text">Read LocalTemperature</string>
+    <string name="read_thermo_weekly_btn_text">Read WeeklySchedule</string>
+    <string name="set_thermo_weekly_btn_text">Set WeeklySchedule</string>
+
     <string name="send_command_type_label_text">%s/%d command sent!</string>
     <string name="rendezvous_over_ble_btn_text">Rendezvous over BLE</string>
     <string name="rendezvous_over_soft_ap_btn_text">Rendezvous over Soft AP</string>

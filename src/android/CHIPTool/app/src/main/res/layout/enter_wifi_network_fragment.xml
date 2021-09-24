@@ -20,6 +20,7 @@
         android:layout_below="@id/titleTv"
         android:inputType="text"
         android:textSize="20sp"
+        android:text="ImxRouter"
         android:hint="@string/enter_wifi_ssid_hint"/>
 
     <EditText
@@ -29,6 +30,7 @@
         android:layout_margin="16dp"
         android:layout_below="@id/ssidEd"
         android:inputType="text"
+        android:text="1234567890"
         android:textSize="20sp"
         android:hint="@string/enter_wifi_password_hint"/>
 

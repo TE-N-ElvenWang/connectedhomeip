@@ -52,6 +52,7 @@ class SelectActionFragment : Fragment() {
       }
       echoClientBtn.setOnClickListener { getCallback()?.handleEchoClientClicked() }
       onOffClusterBtn.setOnClickListener { getCallback()?.handleOnOffClicked() }
+      thermoControlBtn.setOnClickListener { getCallback()?.handleThermoClicked() }
       sensorClustersBtn.setOnClickListener{ getCallback()?.handleSensorClicked() }
       attestationTestBtn.setOnClickListener { getCallback()?.handleAttestationTestClicked() }
     }
@@ -110,6 +111,8 @@ class SelectActionFragment : Fragment() {
     fun handleEchoClientClicked()
     /** Notifies listener of Light On/Off & Level Cluster button click. */
     fun handleOnOffClicked()
+    /** Notifies listener of Thermo Control button click. */
+    fun handleThermoClicked()
     /** Notifies listener of Sensor Clusters button click. */
     fun handleSensorClicked()
     /** Notifies listener of attestation command button clicked. */
