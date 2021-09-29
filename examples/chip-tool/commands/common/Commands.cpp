@@ -20,6 +20,8 @@
 
 #include "Command.h"
 
+#include "Options.h"
+
 #include <algorithm>
 #include <string>
 
@@ -53,13 +55,23 @@ int Commands::Run(int argc, char ** argv)
 
     err = chip::Platform::MemoryInit();
     VerifyOrExit(err == CHIP_NO_ERROR, ChipLogError(Controller, "Init Memory failure: %s", chip::ErrorStr(err)));
+    if (CHIP_NO_ERROR == ParseArguments(argc, argv))
+    {
+        if (ChiptoolCommandOptions::GetInstance().DeviceName.length() != 0)
+        {
+            char * processName = argv[0];
+            argv += 2;
+            *argv = processName;
+            argc -= 2;
+        }
+    }
 
 #if CHIP_DEVICE_LAYER_TARGET_LINUX && CHIP_DEVICE_CONFIG_ENABLE_CHIPOBLE
     // By default, Linux device is configured as a BLE peripheral while the controller needs a BLE central.
     SuccessOrExit(err = chip::DeviceLayer::Internal::BLEMgrImpl().ConfigureBle(/* BLE adapter ID */ 0, /* BLE central */ true));
 #endif
 
-    err = mStorage.Init();
+    err = mStorage.Init(ChiptoolCommandOptions::GetInstance().DeviceName.c_str());
     VerifyOrExit(err == CHIP_NO_ERROR, ChipLogError(Controller, "Init Storage failure: %s", chip::ErrorStr(err)));
 
     chip::Logging::SetLogFilter(mStorage.GetLoggingLevel());
@@ -302,7 +314,7 @@ bool Commands::IsGlobalCommand(std::string commandName) const
 void Commands::ShowClusters(std::string executable)
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "  %s cluster_name command_name [param1 param2 ...]\n", executable.c_str());
+    fprintf(stderr, "  %s [--name section_name] cluster_name command_name [param1 param2 ...]\n", executable.c_str());
     fprintf(stderr, "\n");
     fprintf(stderr, "  +-------------------------------------------------------------------------------------+\n");
     fprintf(stderr, "  | Clusters:                                                                           |\n");
@@ -320,7 +332,7 @@ void Commands::ShowClusters(std::string executable)
 void Commands::ShowCluster(std::string executable, std::string clusterName, CommandsVector & commands)
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "  %s %s command_name [param1 param2 ...]\n", executable.c_str(), clusterName.c_str());
+    fprintf(stderr, "  %s [--name section_name] %s command_name [param1 param2 ...]\n", executable.c_str(), clusterName.c_str());
     fprintf(stderr, "\n");
     fprintf(stderr, "  +-------------------------------------------------------------------------------------+\n");
     fprintf(stderr, "  | Commands:                                                                           |\n");
