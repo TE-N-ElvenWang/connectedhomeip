@@ -33,7 +33,7 @@ using namespace ::chip::Controller;
 using namespace ::chip::Logging;
 
 constexpr const char kFilename[]           = "/tmp/chip_tool_config.ini";
-constexpr const char kDefaultSectionName[] = "Default";
+char kDefaultSectionName[32] = {0};
 constexpr const char kPortKey[]            = "ListenPort";
 constexpr const char kLoggingKey[]         = "LoggingLevel";
 constexpr const char kLocalNodeIdKey[]     = "LocalNodeId";
@@ -71,7 +71,7 @@ std::string Base64ToString(const std::string & b64Value)
 
 } // namespace
 
-CHIP_ERROR PersistentStorage::Init()
+CHIP_ERROR PersistentStorage::Init(const char * sectionName)
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
 
@@ -83,9 +83,14 @@ CHIP_ERROR PersistentStorage::Init()
         ifs.open(kFilename, std::ifstream::in);
     }
     VerifyOrExit(ifs.is_open(), err = CHIP_ERROR_OPEN_FAILED);
+    if (sectionName)
+        strcpy(kDefaultSectionName, sectionName);
+    else 
+        strcpy(kDefaultSectionName, "Default");
 
     mConfig.parse(ifs);
     ifs.close();
+
 
 exit:
     return err;

@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <string>
+#include <unistd.h>
 
 #if CONFIG_DEVICE_LAYER
 #include <platform/CHIPDeviceLayer.h>
@@ -46,6 +47,24 @@ int Commands::Run(int argc, char ** argv)
     Command * command = nullptr;
     NodeId localId;
     NodeId remoteId;
+    char *argNodeId = nullptr;
+
+    const char *optstring = "n::";
+    int opt;
+    while((opt = getopt(argc, argv, optstring)) != -1)
+    {
+        if (opt == 'n')
+        {
+            ChipLogError(Controller, "n optargs = %s", optarg);
+            argNodeId = optarg;
+        }
+    }
+    if (argNodeId != nullptr)
+    {
+        argv++;
+        argc--;
+    }
+    //ChipLogError(Controller, "next argv=%s", *argv);
 
     chip::Platform::ScopedMemoryBuffer<uint8_t> noc;
     chip::Platform::ScopedMemoryBuffer<uint8_t> icac;
@@ -59,7 +78,7 @@ int Commands::Run(int argc, char ** argv)
     SuccessOrExit(err = chip::DeviceLayer::Internal::BLEMgrImpl().ConfigureBle(/* BLE adapter ID */ 0, /* BLE central */ true));
 #endif
 
-    err = mStorage.Init();
+    err = mStorage.Init(argNodeId);
     VerifyOrExit(err == CHIP_NO_ERROR, ChipLogError(Controller, "Init Storage failure: %s", chip::ErrorStr(err)));
 
     chip::Logging::SetLogFilter(mStorage.GetLoggingLevel());
