@@ -32,6 +32,11 @@
 #include <lib/support/CHIPMem.h>
 #include <lib/support/CodeUtils.h>
 #include <lib/support/ScopedBuffer.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#define FIFO_PATH "/tmp/chip_tool_fifo"
+#define FIFO_BUF_SZ 1024
 
 void Commands::Register(const char * clusterName, commands_list commandsList)
 {
@@ -48,6 +53,17 @@ int Commands::Run(int argc, char ** argv)
     Command * command = nullptr;
     NodeId localId;
     NodeId remoteId;
+#ifdef CONFIG_CHIP_TOOL_SERVER
+    char read_buf[FIFO_BUF_SZ];
+    int ret = 0;
+    int fd;
+    char * args[20] = { 0 };
+    char ** args_pass;
+    int argn                = 0;
+    char * split_ptr        = NULL;
+    char * delim            = NULL;
+    const char * space_char = " ";
+#endif
 
     chip::Platform::ScopedMemoryBuffer<uint8_t> noc;
     chip::Platform::ScopedMemoryBuffer<uint8_t> icac;
@@ -55,6 +71,7 @@ int Commands::Run(int argc, char ** argv)
 
     err = chip::Platform::MemoryInit();
     VerifyOrExit(err == CHIP_NO_ERROR, ChipLogError(Controller, "Init Memory failure: %s", chip::ErrorStr(err)));
+#if !defined(CONFIG_CHIP_TOOL_SERVER)
     if (CHIP_NO_ERROR == ParseArguments(argc, argv))
     {
         if (ChiptoolCommandOptions::GetInstance().DeviceName.length() != 0)
@@ -65,6 +82,7 @@ int Commands::Run(int argc, char ** argv)
             argc -= 2;
         }
     }
+#endif
 
 #if CHIP_DEVICE_LAYER_TARGET_LINUX && CHIP_DEVICE_CONFIG_ENABLE_CHIPOBLE
     // By default, Linux device is configured as a BLE peripheral while the controller needs a BLE central.
@@ -125,8 +143,69 @@ int Commands::Run(int argc, char ** argv)
     VerifyOrExit(err == CHIP_NO_ERROR, ChipLogError(Controller, "Init failure! Run Loop: %s", chip::ErrorStr(err)));
 #endif // CONFIG_USE_SEPARATE_EVENTLOOP
 
+#ifdef CONFIG_CHIP_TOOL_SERVER
+    while (true)
+    {
+        if (access(FIFO_PATH, F_OK) != 0)
+        {
+            ChipLogError(chipTool, "sendrolon server will create fifo: %s", FIFO_PATH);
+            mkfifo(FIFO_PATH, 0666);
+        }
+        fd = open(FIFO_PATH, O_RDONLY);
+        if (fd >= 0)
+        {
+            while ((ret = read(fd, read_buf, FIFO_BUF_SZ) > 0))
+            {
+                ChipLogError(chipTool, "sendrolon server get fifo(%d) read buf=%s", ret, read_buf);
+            }
+            close(fd);
+            //   ChipLogError(chipTool, "sendrolon server finished! ret=%d", ret);
+        }
+        for (int i = 0; i < 20; i++)
+        {
+            args[i] = NULL;
+        }
+        args_pass = args;
+        argn      = 0;
+        delim     = (char *) space_char;
+        split_ptr = strtok(read_buf, delim);
+        while (split_ptr != NULL)
+        {
+            //    ChipLogError(chipTool, "sendrolon will handle argn(%d), split_ptr=%s", argn, split_ptr);
+            // strcpy(args[argn], split_ptr);
+            args[argn] = split_ptr;
+            argn++;
+            split_ptr = strtok(NULL, delim);
+        }
+        ChiptoolCommandOptions::GetInstance().DeviceName.assign("");
+        if (CHIP_NO_ERROR == ParseArguments(argn, args_pass))
+        {
+            ChipLogError(chipTool, "sendrolon server will use device:%s", ChiptoolCommandOptions::GetInstance().DeviceName.c_str());
+            if (ChiptoolCommandOptions::GetInstance().DeviceName.length() != 0)
+            {
+                char * processName = args_pass[0];
+                args_pass += 2;
+                *args_pass = processName;
+                argn -= 2;
+                mStorage.mSectionName.assign(ChiptoolCommandOptions::GetInstance().DeviceName);
+                localId  = mStorage.GetLocalNodeId();
+                remoteId = mStorage.GetRemoteNodeId();
+            }
+        }
+        // for (int i = 0; i < argn; i++)
+        // {
+        //     ChipLogError(chipTool, "sendrolon server args[i] = %s", args[i]);
+        // }
+        err = RunCommand(localId, remoteId, argn, args_pass, &command);
+        command->Shutdown();
+    }
+#else
     err = RunCommand(localId, remoteId, argc, argv, &command);
     SuccessOrExit(err);
+    // Loop here will be OK
+    // err = RunCommand(localId, remoteId, argc, argv, &command);
+    // SuccessOrExit(err);
+#endif
 
 #if !CONFIG_USE_SEPARATE_EVENTLOOP
     chip::DeviceLayer::PlatformMgr().RunEventLoop();
@@ -166,6 +245,12 @@ CHIP_ERROR Commands::RunCommand(NodeId localId, NodeId remoteId, int argc, char 
     CHIP_ERROR err = CHIP_NO_ERROR;
     std::map<std::string, CommandsVector>::iterator cluster;
     Command * command = nullptr;
+#ifdef CONFIG_CHIP_TOOL_MANAGER
+    ssize_t ret;
+    int fd;
+    char write_buf[FIFO_BUF_SZ] = { 0 };
+    int i;
+#endif
 
     if (argc <= 1)
     {
@@ -222,7 +307,43 @@ CHIP_ERROR Commands::RunCommand(NodeId localId, NodeId remoteId, int argc, char 
         ShowCommand(argv[0], argv[1], command);
         ExitNow(err = CHIP_ERROR_INVALID_ARGUMENT);
     }
+#ifdef CONFIG_CHIP_TOOL_MANAGER
+    if (access(FIFO_PATH, F_OK) == 0)
+    {
 
+        char * dev_name = NULL;
+        if (ChiptoolCommandOptions::GetInstance().DeviceName.length() != 0)
+        {
+            dev_name = (char *) ChiptoolCommandOptions::GetInstance().DeviceName.c_str();
+        }
+        for (i = 0; i < argc; i++)
+        {
+            if (i == 1 && dev_name != NULL)
+            {
+                strcat(write_buf, "--name");
+                strcat(write_buf, " ");
+                strcat(write_buf, dev_name);
+                strcat(write_buf, " ");
+            }
+            strcat(write_buf, argv[i]);
+            strcat(write_buf, " ");
+        }
+        ChipLogError(chipTool, "sendrolon manager will write (%s) to fifo: %s", write_buf, FIFO_PATH);
+        fd = open(FIFO_PATH, O_WRONLY);
+
+        if (fd >= 0)
+        {
+            ret = write(fd, write_buf, sizeof(write_buf));
+            ChipLogError(chipTool, "sendrolon manager fifo wrote %ld.", ret);
+            close(fd);
+        }
+        else
+        {
+            ChipLogError(chipTool, "sendrolon failed to open FIFO file:%s", FIFO_PATH);
+        }
+    }
+
+#else
     {
         Command::ExecutionContext execContext;
 
@@ -250,6 +371,7 @@ CHIP_ERROR Commands::RunCommand(NodeId localId, NodeId remoteId, int argc, char 
         command->ScheduleWaitForResponse(command->GetWaitDurationInSeconds());
 #endif // CONFIG_USE_SEPARATE_EVENTLOOP
     }
+#endif
 
 exit:
     return err;

@@ -49,6 +49,7 @@ CHIP_ERROR PairingCommand::Run()
         // and get the node from that, but the APIs are not set up that way yet.
         NodeId randomId;
         ReturnErrorOnFailure(Controller::ExampleOperationalCredentialsIssuer::GetRandomOperationalNodeId(&randomId));
+        randomId &= 0x0000FFFFFFFF;
 
         ChipLogProgress(Controller, "Generated random node id: 0x" ChipLogFormatX64, ChipLogValueX64(randomId));
 

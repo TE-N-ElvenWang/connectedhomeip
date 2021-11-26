@@ -43,6 +43,7 @@ public:
     // Store node ids.
     CHIP_ERROR SetLocalNodeId(chip::NodeId nodeId);
     CHIP_ERROR SetRemoteNodeId(chip::NodeId nodeId);
+    std::string mSectionName;
 
 private:
     // Helpers for node ids.
@@ -51,5 +52,4 @@ private:
 
     CHIP_ERROR CommitConfig();
     inipp::Ini<char> mConfig;
-    std::string mSectionName;
 };
