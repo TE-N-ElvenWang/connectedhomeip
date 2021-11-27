@@ -99,10 +99,8 @@ CHIP_ERROR PersistentStorage::SyncGetKeyValue(const char * key, void * value, ui
 {
     std::string iniValue;
 
-    ChipLogError(chipTool, "sendrolon SyncGetKeyValue key=%s", key);
     if (!strcmp(key, kLocalNodeIdKey) || !strcmp(key, kRemoteNodeIdKey))
     {
-        ChipLogError(chipTool, "sendrolon SyncGetKeyValue will use mSectionName=%s", mSectionName.c_str());
         auto section = mConfig.sections[mSectionName];
         auto it      = section.find(key);
         ReturnErrorCodeIf(it == section.end(), CHIP_ERROR_KEY_NOT_FOUND);
@@ -111,7 +109,6 @@ CHIP_ERROR PersistentStorage::SyncGetKeyValue(const char * key, void * value, ui
     }
     else
     {
-        ChipLogError(chipTool, "sendrolon SyncGetKeyValue will use kDefaultSectionName");
         auto section = mConfig.sections[kDefaultSectionName];
         auto it      = section.find(key);
         ReturnErrorCodeIf(it == section.end(), CHIP_ERROR_KEY_NOT_FOUND);
@@ -136,17 +133,14 @@ CHIP_ERROR PersistentStorage::SyncGetKeyValue(const char * key, void * value, ui
 
 CHIP_ERROR PersistentStorage::SyncSetKeyValue(const char * key, const void * value, uint16_t size)
 {
-    ChipLogError(chipTool, "sendrolon SyncSetKeyValue key=%s", key);
     if (!strcmp(key, kLocalNodeIdKey) || !strcmp(key, kRemoteNodeIdKey))
     {
-        ChipLogError(chipTool, "sendrolon SyncSetKeyValue will use mSectionName=%s", mSectionName.c_str());
         auto section                   = mConfig.sections[mSectionName];
         section[key]                   = StringToBase64(std::string(static_cast<const char *>(value), size));
         mConfig.sections[mSectionName] = section;
     }
     else
     {
-        ChipLogError(chipTool, "sendrolon SyncSetKeyValue will use kDefaultSectionName");
         auto section                          = mConfig.sections[kDefaultSectionName];
         section[key]                          = StringToBase64(std::string(static_cast<const char *>(value), size));
         mConfig.sections[kDefaultSectionName] = section;

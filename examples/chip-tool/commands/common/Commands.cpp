@@ -148,7 +148,6 @@ int Commands::Run(int argc, char ** argv)
     {
         if (access(FIFO_PATH, F_OK) != 0)
         {
-            ChipLogError(chipTool, "sendrolon server will create fifo: %s", FIFO_PATH);
             mkfifo(FIFO_PATH, 0666);
         }
         fd = open(FIFO_PATH, O_RDONLY);
@@ -156,10 +155,8 @@ int Commands::Run(int argc, char ** argv)
         {
             while ((ret = read(fd, read_buf, FIFO_BUF_SZ) > 0))
             {
-                ChipLogError(chipTool, "sendrolon server get fifo(%d) read buf=%s", ret, read_buf);
             }
             close(fd);
-            //   ChipLogError(chipTool, "sendrolon server finished! ret=%d", ret);
         }
         for (int i = 0; i < 20; i++)
         {
@@ -171,8 +168,6 @@ int Commands::Run(int argc, char ** argv)
         split_ptr = strtok(read_buf, delim);
         while (split_ptr != NULL)
         {
-            //    ChipLogError(chipTool, "sendrolon will handle argn(%d), split_ptr=%s", argn, split_ptr);
-            // strcpy(args[argn], split_ptr);
             args[argn] = split_ptr;
             argn++;
             split_ptr = strtok(NULL, delim);
@@ -180,7 +175,6 @@ int Commands::Run(int argc, char ** argv)
         ChiptoolCommandOptions::GetInstance().DeviceName.assign("");
         if (CHIP_NO_ERROR == ParseArguments(argn, args_pass))
         {
-            ChipLogError(chipTool, "sendrolon server will use device:%s", ChiptoolCommandOptions::GetInstance().DeviceName.c_str());
             if (ChiptoolCommandOptions::GetInstance().DeviceName.length() != 0)
             {
                 char * processName = args_pass[0];
@@ -192,10 +186,6 @@ int Commands::Run(int argc, char ** argv)
                 remoteId = mStorage.GetRemoteNodeId();
             }
         }
-        // for (int i = 0; i < argn; i++)
-        // {
-        //     ChipLogError(chipTool, "sendrolon server args[i] = %s", args[i]);
-        // }
         err = RunCommand(localId, remoteId, argn, args_pass, &command);
         command->Shutdown();
     }
@@ -246,7 +236,6 @@ CHIP_ERROR Commands::RunCommand(NodeId localId, NodeId remoteId, int argc, char 
     std::map<std::string, CommandsVector>::iterator cluster;
     Command * command = nullptr;
 #ifdef CONFIG_CHIP_TOOL_MANAGER
-    ssize_t ret;
     int fd;
     char write_buf[FIFO_BUF_SZ] = { 0 };
     int i;
@@ -328,18 +317,16 @@ CHIP_ERROR Commands::RunCommand(NodeId localId, NodeId remoteId, int argc, char 
             strcat(write_buf, argv[i]);
             strcat(write_buf, " ");
         }
-        ChipLogError(chipTool, "sendrolon manager will write (%s) to fifo: %s", write_buf, FIFO_PATH);
         fd = open(FIFO_PATH, O_WRONLY);
 
         if (fd >= 0)
         {
-            ret = write(fd, write_buf, sizeof(write_buf));
-            ChipLogError(chipTool, "sendrolon manager fifo wrote %ld.", ret);
+            write(fd, write_buf, sizeof(write_buf));
             close(fd);
         }
         else
         {
-            ChipLogError(chipTool, "sendrolon failed to open FIFO file:%s", FIFO_PATH);
+            ChipLogError(chipTool, "failed to open FIFO file:%s", FIFO_PATH);
         }
     }
 
