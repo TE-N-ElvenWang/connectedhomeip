@@ -102,6 +102,9 @@ int Commands::Run(int argc, char ** argv)
     chip::Logging::SetLogFilter(mStorage.GetLoggingLevel());
     localId  = mStorage.GetLocalNodeId();
     remoteId = mStorage.GetRemoteNodeId();
+    ChiptoolCommandOptions::GetInstance().nodeDict.insert({ remoteId, ChiptoolCommandOptions::GetInstance().DeviceName });
+    ChipLogError(Controller, "remoteId(0x%lx) assigned to DeviceName:%s", remoteId,
+                 ChiptoolCommandOptions::GetInstance().nodeDict[remoteId].c_str());
 
     ChipLogProgress(Controller, "Read local id 0x" ChipLogFormatX64 ", remote id 0x" ChipLogFormatX64, ChipLogValueX64(localId),
                     ChipLogValueX64(remoteId));
@@ -191,6 +194,10 @@ int Commands::Run(int argc, char ** argv)
                 mStorage.mSectionName.assign(ChiptoolCommandOptions::GetInstance().DeviceName);
                 localId  = mStorage.GetLocalNodeId();
                 remoteId = mStorage.GetRemoteNodeId();
+                ChiptoolCommandOptions::GetInstance().nodeDict.insert(
+                    { remoteId, ChiptoolCommandOptions::GetInstance().DeviceName });
+                ChipLogError(Controller, "remoteId(0x%lx) assigned to DeviceName:%s", remoteId,
+                             ChiptoolCommandOptions::GetInstance().nodeDict[remoteId].c_str());
             }
         }
         err = RunCommand(localId, remoteId, argn, args_pass, &command);

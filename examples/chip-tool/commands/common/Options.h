@@ -25,6 +25,7 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 
 #include <lib/core/CHIPError.h>
 #include <setup_payload/SetupPayload.h>
@@ -34,7 +35,8 @@ struct ChiptoolCommandOptions
     chip::SetupPayload payload;
     std::string DeviceName;
     uint64_t nodeId;
-    
+    std::map<uint64_t, std::string> nodeDict;
+
     static ChiptoolCommandOptions & GetInstance();
 };
 

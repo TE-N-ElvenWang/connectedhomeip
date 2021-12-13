@@ -22,6 +22,7 @@
  *
  */
 
+#include "../../examples/chip-tool/commands/common/Options.h"
 #include <app/AppBuildConfig.h>
 #include <app/InteractionModelEngine.h>
 #include <app/ReadClient.h>
@@ -291,11 +292,18 @@ CHIP_ERROR ReadClient::OnMessageReceived(Messaging::ExchangeContext * apExchange
     VerifyOrExit(mpDelegate != nullptr, err = CHIP_ERROR_INCORRECT_STATE);
     if (aPayloadHeader.HasMessageType(Protocols::InteractionModel::MsgType::ReportData))
     {
+        ChipLogError(ReportFilter, "NXP CES DEMO reported NodeId: 0x%lx devicename=%s",
+                     apExchangeContext->GetSecureSession().GetPeerNodeId(),
+                     ChiptoolCommandOptions::GetInstance().nodeDict[apExchangeContext->GetSecureSession().GetPeerNodeId()].c_str());
         err = ProcessReportData(std::move(aPayload));
         SuccessOrExit(err);
     }
     else if (aPayloadHeader.HasMessageType(Protocols::InteractionModel::MsgType::SubscribeResponse))
     {
+
+        ChipLogError(ReportFilter, "NXP CES DEMO reported NodeId: 0x%lx devicename=%s",
+                     apExchangeContext->GetSecureSession().GetPeerNodeId(),
+                     ChiptoolCommandOptions::GetInstance().nodeDict[apExchangeContext->GetSecureSession().GetPeerNodeId()].c_str());
         VerifyOrExit(apExchangeContext == mpExchangeCtx, err = CHIP_ERROR_INCORRECT_STATE);
         err = ProcessSubscribeResponse(std::move(aPayload));
         SuccessOrExit(err);
@@ -327,7 +335,10 @@ CHIP_ERROR ReadClient::AbortExistingExchangeContext()
 CHIP_ERROR ReadClient::OnUnsolicitedReportData(Messaging::ExchangeContext * apExchangeContext,
                                                System::PacketBufferHandle && aPayload)
 {
-    mpExchangeCtx  = apExchangeContext;
+    mpExchangeCtx = apExchangeContext;
+    ChipLogError(ReportFilter, "NXP CES DEMO reported NodeId: 0x%lx devicename=%s",
+                 apExchangeContext->GetSecureSession().GetPeerNodeId(),
+                 ChiptoolCommandOptions::GetInstance().nodeDict[apExchangeContext->GetSecureSession().GetPeerNodeId()].c_str());
     CHIP_ERROR err = ProcessReportData(std::move(aPayload));
     mpExchangeCtx  = nullptr;
     if (err != CHIP_NO_ERROR)
