@@ -81,6 +81,13 @@ int Commands::Run(int argc, char ** argv)
             *argv = processName;
             argc -= 2;
         }
+        if (ChiptoolCommandOptions::GetInstance().nodeId != 0)
+        {
+            char * processName = argv[0];
+            argv += 2;
+            *argv = processName;
+            argc -= 2;
+        }
     }
 #endif
 

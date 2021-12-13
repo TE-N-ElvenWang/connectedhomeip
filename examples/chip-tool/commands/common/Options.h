@@ -33,6 +33,8 @@ struct ChiptoolCommandOptions
 {
     chip::SetupPayload payload;
     std::string DeviceName;
+    uint64_t nodeId;
+    
     static ChiptoolCommandOptions & GetInstance();
 };
 

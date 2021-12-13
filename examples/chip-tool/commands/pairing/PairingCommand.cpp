@@ -18,6 +18,7 @@
 
 #include "PairingCommand.h"
 #include "platform/PlatformManager.h"
+#include "../common/Options.h"
 #include <controller/ExampleOperationalCredentialsIssuer.h>
 #include <crypto/CHIPCryptoPAL.h>
 #include <lib/core/CHIPSafeCasts.h>
@@ -52,7 +53,10 @@ CHIP_ERROR PairingCommand::Run()
         randomId &= 0x0000FFFFFFFF;
 
         ChipLogProgress(Controller, "Generated random node id: 0x" ChipLogFormatX64, ChipLogValueX64(randomId));
-
+        if (ChiptoolCommandOptions::GetInstance().nodeId != 0)
+        {
+            randomId = ChiptoolCommandOptions::GetInstance().nodeId;
+        }
         ReturnErrorOnFailure(GetExecContext()->storage->SetRemoteNodeId(randomId));
         GetExecContext()->remoteId = randomId;
 #else  // CONFIG_PAIR_WITH_RANDOM_ID
