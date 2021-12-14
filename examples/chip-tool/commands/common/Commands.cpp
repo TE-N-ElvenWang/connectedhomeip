@@ -29,6 +29,7 @@
 #include <platform/CHIPDeviceLayer.h>
 #endif
 
+#include <controller/CHIPDevice.h>
 #include <lib/support/CHIPMem.h>
 #include <lib/support/CodeUtils.h>
 #include <lib/support/ScopedBuffer.h>
@@ -201,6 +202,20 @@ int Commands::Run(int argc, char ** argv)
             }
         }
         err = RunCommand(localId, remoteId, argn, args_pass, &command);
+        err = command->GetCommandExitStatus();
+        if (err != CHIP_NO_ERROR)
+        {
+            ChipLogError(Controller, "Will reset device!");
+            chip::Controller::Device * mDevice;
+            mController.GetDevice(remoteId, &mDevice);
+            mDevice->Reset();
+            err = RunCommand(localId, remoteId, argn, args_pass, &command);
+            err = command->GetCommandExitStatus();
+            if (err != CHIP_NO_ERROR)
+            {
+                ChipLogError(Controller, "NXP CES DEMO ABORT! Command still failed after reset. Abandon command");
+            }
+        }
         command->Shutdown();
     }
 #else
