@@ -36,6 +36,7 @@ struct ChiptoolCommandOptions
     std::string DeviceName;
     uint64_t nodeId;
     std::map<uint64_t, std::string> nodeDict;
+    std::string currentDevice;
 
     static ChiptoolCommandOptions & GetInstance();
 };

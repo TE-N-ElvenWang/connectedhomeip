@@ -295,6 +295,8 @@ CHIP_ERROR ReadClient::OnMessageReceived(Messaging::ExchangeContext * apExchange
         ChipLogError(ReportFilter, "NXP CES DEMO reported NodeId: 0x%lx devicename=%s",
                      apExchangeContext->GetSecureSession().GetPeerNodeId(),
                      ChiptoolCommandOptions::GetInstance().nodeDict[apExchangeContext->GetSecureSession().GetPeerNodeId()].c_str());
+        ChiptoolCommandOptions::GetInstance().currentDevice.assign(
+            ChiptoolCommandOptions::GetInstance().nodeDict[apExchangeContext->GetSecureSession().GetPeerNodeId()]);
         err = ProcessReportData(std::move(aPayload));
         SuccessOrExit(err);
     }
@@ -304,6 +306,8 @@ CHIP_ERROR ReadClient::OnMessageReceived(Messaging::ExchangeContext * apExchange
         ChipLogError(ReportFilter, "NXP CES DEMO reported NodeId: 0x%lx devicename=%s",
                      apExchangeContext->GetSecureSession().GetPeerNodeId(),
                      ChiptoolCommandOptions::GetInstance().nodeDict[apExchangeContext->GetSecureSession().GetPeerNodeId()].c_str());
+        ChiptoolCommandOptions::GetInstance().currentDevice.assign(
+            ChiptoolCommandOptions::GetInstance().nodeDict[apExchangeContext->GetSecureSession().GetPeerNodeId()]);
         VerifyOrExit(apExchangeContext == mpExchangeCtx, err = CHIP_ERROR_INCORRECT_STATE);
         err = ProcessSubscribeResponse(std::move(aPayload));
         SuccessOrExit(err);
@@ -339,6 +343,8 @@ CHIP_ERROR ReadClient::OnUnsolicitedReportData(Messaging::ExchangeContext * apEx
     ChipLogError(ReportFilter, "NXP CES DEMO reported NodeId: 0x%lx devicename=%s",
                  apExchangeContext->GetSecureSession().GetPeerNodeId(),
                  ChiptoolCommandOptions::GetInstance().nodeDict[apExchangeContext->GetSecureSession().GetPeerNodeId()].c_str());
+    ChiptoolCommandOptions::GetInstance().currentDevice.assign(
+        ChiptoolCommandOptions::GetInstance().nodeDict[apExchangeContext->GetSecureSession().GetPeerNodeId()]);
     CHIP_ERROR err = ProcessReportData(std::move(aPayload));
     mpExchangeCtx  = nullptr;
     if (err != CHIP_NO_ERROR)

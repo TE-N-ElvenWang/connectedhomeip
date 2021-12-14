@@ -23,6 +23,7 @@
 
 #include "AttributeDataElement.h"
 
+#include "../../../examples/chip-tool/commands/common/Options.h"
 #include "MessageDefHelper.h"
 
 #include <inttypes.h>
@@ -59,7 +60,7 @@ AttributeDataElement::Parser::ParseData(chip::TLV::TLVReader & aReader, int aDep
 
     if (aDepth == 0)
     {
-        PRETTY_PRINT("\tData = ");
+        PRETTY_PRINT("\tNXP CES DEMO ON REPORT Device: %s, Data = ", ChiptoolCommandOptions::GetInstance().currentDevice.c_str());
     }
     else
     {
