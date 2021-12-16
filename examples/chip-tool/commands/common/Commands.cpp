@@ -37,6 +37,7 @@
 #include <sys/types.h>
 
 #define FIFO_PATH "/tmp/chip_tool_fifo"
+#define FIFO_PATH_ACK "/tmp/chip_tool_fifo_ack"
 #define FIFO_BUF_SZ 1024
 
 void Commands::Register(const char * clusterName, commands_list commandsList)
@@ -56,7 +57,8 @@ int Commands::Run(int argc, char ** argv)
     NodeId remoteId;
 #ifdef CONFIG_CHIP_TOOL_SERVER
     char read_buf[FIFO_BUF_SZ];
-    int ret = 0;
+    char write_buf[FIFO_BUF_SZ] = "done";
+    int ret                     = 0;
     int fd;
     char * args[20] = { 0 };
     char ** args_pass;
@@ -64,6 +66,15 @@ int Commands::Run(int argc, char ** argv)
     char * split_ptr        = NULL;
     char * delim            = NULL;
     const char * space_char = " ";
+#endif
+#ifdef CONFIG_CHIP_TOOL_S_M_ACK
+#ifdef CONFIG_CHIP_TOOL_MANAGER
+    int fd;
+    char write_buf[FIFO_BUF_SZ] = { 0 };
+    char read_buf[FIFO_BUF_SZ];
+    int ret;
+    int i;
+#endif
 #endif
 
     chip::Platform::ScopedMemoryBuffer<uint8_t> noc;
@@ -90,6 +101,66 @@ int Commands::Run(int argc, char ** argv)
             argc -= 2;
         }
     }
+#ifdef CONFIG_CHIP_TOOL_S_M_ACK
+#ifdef CONFIG_CHIP_TOOL_MANAGER
+    if (access(FIFO_PATH, F_OK) == 0)
+    {
+
+        char * dev_name = NULL;
+        if (ChiptoolCommandOptions::GetInstance().DeviceName.length() != 0)
+        {
+            dev_name = (char *) ChiptoolCommandOptions::GetInstance().DeviceName.c_str();
+        }
+        for (i = 0; i < argc; i++)
+        {
+            if (i == 1 && dev_name != NULL)
+            {
+                strcat(write_buf, "--name");
+                strcat(write_buf, " ");
+                strcat(write_buf, dev_name);
+                strcat(write_buf, " ");
+            }
+            strcat(write_buf, argv[i]);
+            strcat(write_buf, " ");
+        }
+        fd = open(FIFO_PATH, O_WRONLY);
+
+        if (fd >= 0)
+        {
+            write(fd, write_buf, sizeof(write_buf));
+            close(fd);
+        }
+        else
+        {
+            ChipLogError(chipTool, "failed to open FIFO file:%s", FIFO_PATH);
+        }
+
+        if (access(FIFO_PATH_ACK, F_OK) != 0)
+        {
+            mkfifo(FIFO_PATH_ACK, 0666);
+        }
+        fd = open(FIFO_PATH_ACK, O_RDONLY);
+        if (fd >= 0)
+        {
+            while ((ret = read(fd, read_buf, FIFO_BUF_SZ) > 0))
+            {
+                if (read_buf[0] != '0') {
+                    ChipLogError(chipTool, "MANAGER: get error %s", read_buf);
+                    ret = -1;
+                } else {
+                    ChipLogError(chipTool, "MANAGER: No error %s", read_buf);
+                    ret = 0;
+                }
+                close(fd);
+                return ret;
+                
+                break;
+            }
+        }
+    }
+    return 0;
+#endif
+#endif
 #endif
 
 #if CHIP_DEVICE_LAYER_TARGET_LINUX && CHIP_DEVICE_CONFIG_ENABLE_CHIPOBLE
@@ -203,8 +274,9 @@ int Commands::Run(int argc, char ** argv)
         }
         err = RunCommand(localId, remoteId, argn, args_pass, &command);
         err = command->GetCommandExitStatus();
-        if (err != CHIP_NO_ERROR)
+        if (err == CHIP_ERROR_INTERNAL)
         {
+            
             ChipLogError(Controller, "Will reset device!");
             chip::Controller::Device * mDevice;
             mController.GetDevice(remoteId, &mDevice);
@@ -217,6 +289,28 @@ int Commands::Run(int argc, char ** argv)
             }
         }
         command->Shutdown();
+        if (err != CHIP_NO_ERROR)
+            sprintf(write_buf, "%d", err.AsInteger());
+        else
+            sprintf(write_buf, "%d", 0);
+
+#ifdef CONFIG_CHIP_TOOL_S_M_ACK
+        if (access(FIFO_PATH_ACK, F_OK) == 0)
+        {
+
+            fd = open(FIFO_PATH_ACK, O_WRONLY);
+
+            if (fd >= 0)
+            {
+                write(fd, write_buf, sizeof(write_buf));
+                close(fd);
+            }
+            else
+            {
+                ChipLogError(chipTool, "failed to open FIFO file:%s", FIFO_PATH_ACK);
+            }
+        }
+#endif
     }
 #else
     err = RunCommand(localId, remoteId, argc, argv, &command);
@@ -267,6 +361,10 @@ CHIP_ERROR Commands::RunCommand(NodeId localId, NodeId remoteId, int argc, char 
 #ifdef CONFIG_CHIP_TOOL_MANAGER
     int fd;
     char write_buf[FIFO_BUF_SZ] = { 0 };
+#ifdef CONFIG_CHIP_TOOL_S_M_ACK
+    char read_buf[FIFO_BUF_SZ];
+    int ret;
+#endif
     int i;
 #endif
 
@@ -357,6 +455,23 @@ CHIP_ERROR Commands::RunCommand(NodeId localId, NodeId remoteId, int argc, char 
         {
             ChipLogError(chipTool, "failed to open FIFO file:%s", FIFO_PATH);
         }
+
+#ifdef CONFIG_CHIP_TOOL_S_M_ACK
+        if (access(FIFO_PATH_ACK, F_OK) != 0)
+        {
+            mkfifo(FIFO_PATH_ACK, 0666);
+        }
+        fd = open(FIFO_PATH_ACK, O_RDONLY);
+        if (fd >= 0)
+        {
+            while ((ret = read(fd, read_buf, FIFO_BUF_SZ) > 0))
+            {
+                ChipLogError(chipTool, "sendrolon FIFO ACK get packets!");
+                break;
+            }
+            close(fd);
+        }
+#endif
     }
 
 #else

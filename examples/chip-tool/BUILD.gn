@@ -29,6 +29,7 @@ declare_args() {
   config_pair_with_random_id = true
   config_chip_tool_server = true
   config_chip_tool_manager = true
+  config_chip_tool_s_m_ack = true
 }
 
 executable("chip-tool") {
@@ -94,6 +95,7 @@ executable("chip-tool-server") {
     "CONFIG_USE_SEPARATE_EVENTLOOP=${config_use_separate_eventloop}",
     "CONFIG_PAIR_WITH_RANDOM_ID=${config_pair_with_random_id}",
     "CONFIG_CHIP_TOOL_SERVER=${config_chip_tool_server}",
+    "CONFIG_CHIP_TOOL_S_M_ACK=${config_chip_tool_s_m_ack}",
   ]
 
   deps = [
@@ -136,6 +138,7 @@ executable("chip-tool-manager") {
     "CONFIG_USE_SEPARATE_EVENTLOOP=${config_use_separate_eventloop}",
     "CONFIG_PAIR_WITH_RANDOM_ID=${config_pair_with_random_id}",
     "CONFIG_CHIP_TOOL_MANAGER=${config_chip_tool_manager}",
+    "CONFIG_CHIP_TOOL_S_M_ACK=${config_chip_tool_s_m_ack}",
   ]
 
   deps = [
